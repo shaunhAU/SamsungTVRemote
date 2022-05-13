@@ -22,8 +22,19 @@ and limitations under the  License.
 				c.	Added additional button implementations.
 				d.	Other code cleanup functions.
 05.07	2.0.1	Quick Fix for incorrect call for artModeStatus in method artMode.
+===========================================================================================
+===== 2022 Version Notes =============================================================
+013.05	2.0.2 	First contrib with additional appRun functionality:
+                a.  Update case 40 to appRunNetflix(). https://community.hubitat.com/t/samsung-hubitat-tv-integration-2016-and-later/55120/195
+				b. Minor comment updates.
+				c. Change case 39 to addRunYouTubeTV().
+				d. Added appRunDisney() for <2019 Tvs.
+				e. Added appRunPlex (<2019 TVs).
+				f. Added appRunPrimeVideo (2019 TVs).
+				
+05.07	2.0.3	TBA
 ===========================================================================================*/
-def driverVer() { return "2.0.0" }
+def driverVer() { return "2.0.2" }
 import groovy.json.JsonOutput
 
 metadata {
@@ -177,7 +188,7 @@ def contUpdate() {
 	} else {
 		schedule("0/${pollInterval} * * * * ?",  quickPoll)
 		state.WARNING = "<b>Quick Polling can use significant Hub processor resources! " +
-						"Recommed using this with caution.</b>"
+						"Recommend using this with caution.</b>"
 	}
 	resubscribe()
 	runEvery3Hours(resubscribe)
@@ -313,7 +324,7 @@ def parseUpnp(resp) {
 		updateDataValue("rcSid", sid)
 		logDebug("parseUpnp: updated rcSid to ${sid}")
 	} else if (resp.status == 200) {
-		logDebug("parseUPnP: Previous subscription canceled!")
+		logDebug("parseUPnP: Previous subscription cancelled!")
 	} else {
 		logWarn("parseUpnp: Unhandled return. resp =\n${resp}")
 	}
@@ -444,7 +455,7 @@ private listStDevices() {
 	httpGet(sendCmdParams) {resp ->
 		def devicesData = resp.data.items
 		devicesData.each {
-			logInfo("SmartThing Device: [Name : ${it.name} , DeviceId : ${it.deviceId}]")
+			logInfo("SmartThings Device: [Name : ${it.name} , DeviceId : ${it.deviceId}]")
 		}
 	}
 }
@@ -453,7 +464,7 @@ def getStDeviceStatus() { getStDeviceData("status") }
 
 private getStDeviceData(reqType = "status") {
 	if (connectST == false) {
-		logDebug("getStDeviceData failed.  Data not updated. Preference connectST is false")
+		logDebug("getStDeviceData failed. Data not updated. Preference connectST is false")
 		return
 	}else if (stDeviceId == "" || stApiKey == "") {
 		logWarn("getStDeviceData: Missing ID or Key.")
@@ -799,6 +810,11 @@ def appRunYouTubeTV() { appOpenByName("YouTubeTV") }
 
 def appRunHulu() { appOpenByCode("3201601007625") }
 
+def appRunDisneyPlus() { appOpenByCode("3201901017640") }
+
+def appRunPlex() { appOpenByCode("32015112006963") }
+
+
 //	===== Button Interface (facilitates dashboard integration) =====
 def push(pushed) {
 	logDebug("push: button = ${pushed}, trigger = ${state.triggered}")
@@ -842,8 +858,10 @@ def push(pushed) {
 		case 36: fastBack(); break		//	causes fast forward
 		case 37: fastForward(); break	//	causes fast rewind
 		case 38: browser(); break		//	Direct to source 1 (ofour right of TV on menu)
-		case 39: youTube(); break
-		case 40: netflix(); break
+		case 39: appRunYouTubeTV(); break
+		case 40: appRunNetflix(); break
+		case 41: appRunDisneyPlus(); break
+		case 42: appRunPlex(); break
 		default:
 			logDebug("push: Invalid Button Number!")
 			break
